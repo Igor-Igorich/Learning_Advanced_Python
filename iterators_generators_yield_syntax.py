@@ -1,4 +1,3 @@
-
 # def process(x: int) -> None:
 #     print (f"Было получено значение: {x}")
 
@@ -28,10 +27,10 @@
 #         return self
 
 #     def __next__(self) -> int:
-        
+
 #         if self.count >= self.limit:
 #             raise StopIteration
-        
+
 #         result = self.a
 #         self.a, self.b = self.b, self.a + self.b
 #         self.count += 1
@@ -126,9 +125,9 @@
 #     process(record)  # Память O(1) вне зависимости от размера файла
 
 
-import sys
-import random
 import os
+import random
+import sys
 from datetime import datetime, timedelta
 
 file_path = "large_backend_clicks.log"
@@ -136,8 +135,19 @@ num_lines = 100_000
 
 start_time = datetime(2026, 8, 1, 0, 0, 0)
 
-status_codes = [200, 200, 200, 200, 200, 200, 200, 200, 500, 500] # Доля 500 составляет ~20%
-'''
+status_codes = [
+    200,
+    200,
+    200,
+    200,
+    200,
+    200,
+    200,
+    200,
+    500,
+    500,
+]  # Доля 500 составляет ~20%
+"""
 with open(file_path, "w", encoding="utf-8") as f:
     for i in range(num_lines):
         ts = (start_time + timedelta(seconds=i)).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -148,17 +158,17 @@ with open(file_path, "w", encoding="utf-8") as f:
 
 file_size_mb = os.path.getsize(file_path) / (1024 * 1024)
 print(f"Файл создан успешно. Размер файла на диске: {file_size_mb:.2f} МБ\n")
-'''
+"""
 
 
-    
 def read_log_file(filepath: str):
     """Лениво читает файл, очищает строки и пропускает пустые."""
-    with open(filepath, 'r', encoding='utf-8') as f:
+    with open(filepath, "r", encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if line:  # Пропускаем пустые строки сразу
                 yield line
+
 
 def parse_log_records(lines):
     """Парсит строки формата CSV в словари."""
@@ -170,17 +180,20 @@ def parse_log_records(lines):
                 "timestamp": timestamp,
                 "user_id": int(user_id),
                 "status_code": int(status_code),
-                "latency": int(latency)
+                "latency": int(latency),
             }
+
 
 def filter_errors(records, target_status=500):
     """Фильтрует записи по коду статуса."""
     for record in records:
         if record["status_code"] == target_status:
-                yield record
-    
+            yield record
 
-pipeline = filter_errors(parse_log_records(read_log_file(file_path)), target_status=500)
+
+pipeline = filter_errors(
+    parse_log_records(read_log_file(file_path)), target_status=500
+)
 
 
 size_initial = sys.getsizeof(pipeline)
@@ -195,7 +208,9 @@ for log in pipeline:
         sample_logs.append(log)
     # Периодически выводим объем памяти самого генератора в процессе итерации
     if count_500 % 5000 == 0:
-        print(f"Обработано {count_500} ошибок 500 | Текущий размер пайплайна: {sys.getsizeof(pipeline)} байт")
+        print(
+            f"Обработано {count_500} ошибок 500 | Текущий размер пайплайна: {sys.getsizeof(pipeline)} байт"
+        )
 
 size_final = sys.getsizeof(pipeline)
 print(f"Размер объекта-пайплайна после полной обработки: {size_final} байт")
@@ -219,14 +234,13 @@ def log_stream_reader(file_path: str):
             parts = line.split(",")
             if len(parts) == 4:
                 timestamp, user_id, status_code, latency = parts
-                if status_code == '500':
+                if status_code == "500":
                     yield {
                         "timestamp": timestamp,
                         "user_id": int(user_id),
                         "status_code": int(status_code),
-                        "latency": int(latency)
+                        "latency": int(latency),
                     }
-
 
 
 gen = log_stream_reader(file_path)
@@ -243,7 +257,9 @@ for log in gen:
         sample_logs.append(log)
     # Периодически выводим объем памяти самого генератора в процессе итерации
     if count_500 % 5000 == 0:
-        print(f"Обработано {count_500} ошибок 500 | Текущий размер генератора: {sys.getsizeof(gen)} байт")
+        print(
+            f"Обработано {count_500} ошибок 500 | Текущий размер генератора: {sys.getsizeof(gen)} байт"
+        )
 
 size_final = sys.getsizeof(gen)
 print(f"Размер объекта-генератора после полной обработки: {size_final} байт")
